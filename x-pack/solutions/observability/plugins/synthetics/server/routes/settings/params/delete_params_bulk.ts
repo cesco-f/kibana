@@ -6,6 +6,7 @@
  */
 
 import { schema } from '@kbn/config-schema';
+import { scheduleSpaceSyncGlobalParamsTask } from '../../../synthetics_service/sync_global_params_task';
 import { SyntheticsRestApiRouteFactory } from '../../types';
 import { syntheticsParamType } from '../../../../common/types/saved_objects';
 import { SYNTHETICS_API_URLS } from '../../../../common/constants';
@@ -27,13 +28,24 @@ export const deleteSyntheticsParamsBulkRoute: SyntheticsRestApiRouteFactory<
       }),
     },
   },
-  handler: async ({ savedObjectsClient, request }) => {
+  handler: async ({ savedObjectsClient, request, server, spaceId }) => {
     const { ids } = request.body;
 
     const result = await savedObjectsClient.bulkDelete(
       ids.map((id) => ({ type: syntheticsParamType, id })),
       { force: true }
     );
+
+    const {
+      logger,
+      pluginsStart: { taskManager },
+    } = server;
+    await scheduleSpaceSyncGlobalParamsTask({
+      spaceId,
+      taskManager,
+      logger,
+    });
+
     return result.statuses.map(({ id, success }) => ({ id, deleted: success }));
   },
 });

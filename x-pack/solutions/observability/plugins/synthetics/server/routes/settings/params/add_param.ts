@@ -9,6 +9,7 @@ import { schema } from '@kbn/config-schema';
 import { ALL_SPACES_ID } from '@kbn/security-plugin/common/constants';
 import { DEFAULT_SPACE_ID } from '@kbn/spaces-plugin/common';
 import { SavedObject, SavedObjectsBulkCreateObject } from '@kbn/core-saved-objects-api-server';
+import { scheduleSpaceSyncGlobalParamsTask } from '../../../synthetics_service/sync_global_params_task';
 import { SyntheticsRestApiRouteFactory } from '../../types';
 import {
   SyntheticsParamRequest,
@@ -55,6 +56,16 @@ export const addSyntheticsParamsRoute: SyntheticsRestApiRouteFactory<
       const result = await savedObjectsClient.bulkCreate<Omit<SyntheticsParamSOAttributes, 'id'>>(
         savedObjectsData
       );
+
+      const {
+        logger,
+        pluginsStart: { taskManager },
+      } = server;
+      await scheduleSpaceSyncGlobalParamsTask({
+        spaceId,
+        taskManager,
+        logger,
+      });
 
       if (savedObjectsData.length > 1) {
         return result.saved_objects.map((savedObject) => {
