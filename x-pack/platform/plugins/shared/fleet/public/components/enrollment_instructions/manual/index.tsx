@@ -72,6 +72,7 @@ export const ManualInstructions = ({
   gcpOrganizationId = '<ORGANIZATION_ID>',
   gcpAccountType,
   showInstallServers,
+  showCompleteAgentInstructions,
 }: {
   apiKey: string;
   fleetServerHost: string;
@@ -83,7 +84,13 @@ export const ManualInstructions = ({
   gcpOrganizationId?: string;
   gcpAccountType?: string;
   showInstallServers?: boolean;
+  showCompleteAgentInstructions: boolean;
 }) => {
+  // TODO: check how the instructions should change based on the showCompleteAgentInstructions flag
+  const elasticAgentName = showCompleteAgentInstructions
+    ? 'elastic-agent-complete'
+    : 'elastic-agent';
+
   const enrollArgs = getfleetServerHostsEnrollArgs(
     apiKey,
     fleetServerHost,
@@ -95,52 +102,52 @@ export const ManualInstructions = ({
   const fleetServerUrl = enrollArgs?.split('--url=')?.pop()?.split('--enrollment')[0];
   const enrollmentToken = enrollArgs?.split('--enrollment-token=')[1];
 
-  const k8sCommand = 'kubectl apply -f elastic-agent-managed-kubernetes.yml';
+  const k8sCommand = `kubectl apply -f ${elasticAgentName}-managed-kubernetes.yml`;
 
   const { windows: windowsDownloadSourceProxyArgs, curl: curlDownloadSourceProxyArgs } =
     getDownloadSourceProxyArgs(downloadSourceProxy);
 
-  const linuxAarch64Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/elastic-agent-${agentVersion}-linux-arm64.tar.gz ${curlDownloadSourceProxyArgs}
-  tar xzvf elastic-agent-${agentVersion}-linux-arm64.tar.gz
-  cd elastic-agent-${agentVersion}-linux-arm64
-  sudo ./elastic-agent install ${enrollArgs}`;
+  const linuxAarch64Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/${elasticAgentName}-${agentVersion}-linux-arm64.tar.gz ${curlDownloadSourceProxyArgs}
+  tar xzvf ${elasticAgentName}-${agentVersion}-linux-arm64.tar.gz
+  cd ${elasticAgentName}-${agentVersion}-linux-arm64
+  sudo ./${elasticAgentName} install ${enrollArgs}`;
 
-  const linuxX8664Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/elastic-agent-${agentVersion}-linux-x86_64.tar.gz ${curlDownloadSourceProxyArgs}
-tar xzvf elastic-agent-${agentVersion}-linux-x86_64.tar.gz
-cd elastic-agent-${agentVersion}-linux-x86_64
-sudo ./elastic-agent install ${enrollArgs}`;
+  const linuxX8664Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/${elasticAgentName}-${agentVersion}-linux-x86_64.tar.gz ${curlDownloadSourceProxyArgs}
+tar xzvf ${elasticAgentName}-${agentVersion}-linux-x86_64.tar.gz
+cd ${elasticAgentName}-${agentVersion}-linux-x86_64
+sudo ./${elasticAgentName} install ${enrollArgs}`;
 
-  const macAarch64Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/elastic-agent-${agentVersion}-darwin-aarch64.tar.gz ${curlDownloadSourceProxyArgs}
-tar xzvf elastic-agent-${agentVersion}-darwin-aarch64.tar.gz
-cd elastic-agent-${agentVersion}-darwin-aarch64
-sudo ./elastic-agent install ${enrollArgs}`;
+  const macAarch64Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/${elasticAgentName}-${agentVersion}-darwin-aarch64.tar.gz ${curlDownloadSourceProxyArgs}
+tar xzvf ${elasticAgentName}-${agentVersion}-darwin-aarch64.tar.gz
+cd ${elasticAgentName}-${agentVersion}-darwin-aarch64
+sudo ./${elasticAgentName} install ${enrollArgs}`;
 
-  const macX8664Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/elastic-agent-${agentVersion}-darwin-x86_64.tar.gz ${curlDownloadSourceProxyArgs}
-tar xzvf elastic-agent-${agentVersion}-darwin-x86_64.tar.gz
-cd elastic-agent-${agentVersion}-darwin-x86_64
-sudo ./elastic-agent install ${enrollArgs}`;
+  const macX8664Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/${elasticAgentName}-${agentVersion}-darwin-x86_64.tar.gz ${curlDownloadSourceProxyArgs}
+tar xzvf ${elasticAgentName}-${agentVersion}-darwin-x86_64.tar.gz
+cd ${elasticAgentName}-${agentVersion}-darwin-x86_64
+sudo ./${elasticAgentName} install ${enrollArgs}`;
 
   const windowsCommand = `$ProgressPreference = 'SilentlyContinue'
-Invoke-WebRequest -Uri ${downloadBaseUrl}/beats/elastic-agent/elastic-agent-${agentVersion}-windows-x86_64.zip -OutFile elastic-agent-${agentVersion}-windows-x86_64.zip ${windowsDownloadSourceProxyArgs}
-Expand-Archive .\\elastic-agent-${agentVersion}-windows-x86_64.zip -DestinationPath .
-cd elastic-agent-${agentVersion}-windows-x86_64
-.\\elastic-agent.exe install ${enrollArgs}`;
+Invoke-WebRequest -Uri ${downloadBaseUrl}/beats/elastic-agent/${elasticAgentName}-${agentVersion}-windows-x86_64.zip -OutFile ${elasticAgentName}-${agentVersion}-windows-x86_64.zip ${windowsDownloadSourceProxyArgs}
+Expand-Archive .\\${elasticAgentName}-${agentVersion}-windows-x86_64.zip -DestinationPath .
+cd ${elasticAgentName}-${agentVersion}-windows-x86_64
+.\\${elasticAgentName}.exe install ${enrollArgs}`;
 
-  const linuxDebAarch64Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/elastic-agent-${agentVersion}-arm64.deb ${curlDownloadSourceProxyArgs}
-sudo dpkg -i elastic-agent-${agentVersion}-arm64.deb
-sudo systemctl enable elastic-agent \nsudo systemctl start elastic-agent \nsudo elastic-agent enroll ${enrollArgs} \n`;
+  const linuxDebAarch64Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/${elasticAgentName}-${agentVersion}-arm64.deb ${curlDownloadSourceProxyArgs}
+sudo dpkg -i ${elasticAgentName}-${agentVersion}-arm64.deb
+sudo systemctl enable ${elasticAgentName} \nsudo systemctl start ${elasticAgentName} \nsudo ${elasticAgentName} enroll ${enrollArgs} \n`;
 
-  const linuxDebX8664Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/elastic-agent-${agentVersion}-amd64.deb ${curlDownloadSourceProxyArgs}
-sudo dpkg -i elastic-agent-${agentVersion}-amd64.deb
-sudo systemctl enable elastic-agent \nsudo systemctl start elastic-agent \nsudo elastic-agent enroll ${enrollArgs} \n`;
+  const linuxDebX8664Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/${elasticAgentName}-${agentVersion}-amd64.deb ${curlDownloadSourceProxyArgs}
+sudo dpkg -i ${elasticAgentName}-${agentVersion}-amd64.deb
+sudo systemctl enable ${elasticAgentName} \nsudo systemctl start ${elasticAgentName} \nsudo ${elasticAgentName} enroll ${enrollArgs} \n`;
 
-  const linuxRpmAarch64Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/elastic-agent-${agentVersion}-aarch64.rpm ${curlDownloadSourceProxyArgs}
-sudo rpm -vi elastic-agent-${agentVersion}-aarch64.rpm
-sudo systemctl enable elastic-agent \nsudo systemctl start elastic-agent \nsudo elastic-agent enroll ${enrollArgs} \n`;
+  const linuxRpmAarch64Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/${elasticAgentName}-${agentVersion}-aarch64.rpm ${curlDownloadSourceProxyArgs}
+sudo rpm -vi ${elasticAgentName}-${agentVersion}-aarch64.rpm
+sudo systemctl enable ${elasticAgentName} \nsudo systemctl start ${elasticAgentName} \nsudo ${elasticAgentName} enroll ${enrollArgs} \n`;
 
-  const linuxRpmX8664Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/elastic-agent-${agentVersion}-x86_64.rpm ${curlDownloadSourceProxyArgs}
-sudo rpm -vi elastic-agent-${agentVersion}-x86_64.rpm
-sudo systemctl enable elastic-agent \nsudo systemctl start elastic-agent \nsudo elastic-agent enroll ${enrollArgs} \n`;
+  const linuxRpmX8664Command = `curl -L -O ${downloadBaseUrl}/beats/elastic-agent/${elasticAgentName}-${agentVersion}-x86_64.rpm ${curlDownloadSourceProxyArgs}
+sudo rpm -vi ${elasticAgentName}-${agentVersion}-x86_64.rpm
+sudo systemctl enable ${elasticAgentName} \nsudo systemctl start ${elasticAgentName} \nsudo ${elasticAgentName} enroll ${enrollArgs} \n`;
 
   const googleCloudShellCommand = `gcloud config set project ${gcpProjectId} && ${
     gcpAccountType === 'organization-account' ? `ORG_ID=${gcpOrganizationId}` : ``
