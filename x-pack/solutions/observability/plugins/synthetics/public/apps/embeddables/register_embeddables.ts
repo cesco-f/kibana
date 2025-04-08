@@ -8,7 +8,11 @@
 import { CoreSetup } from '@kbn/core-lifecycle-browser';
 
 import { ClientPluginsSetup, ClientPluginsStart } from '../../plugin';
-import { SYNTHETICS_MONITORS_EMBEDDABLE, SYNTHETICS_STATS_OVERVIEW_EMBEDDABLE } from './constants';
+import {
+  SYNTHETICS_MONITOR_METRICS_EMBEDDABLE,
+  SYNTHETICS_MONITORS_EMBEDDABLE,
+  SYNTHETICS_STATS_OVERVIEW_EMBEDDABLE,
+} from './constants';
 
 export const registerSyntheticsEmbeddables = (
   core: CoreSetup<ClientPluginsStart, unknown>,
@@ -31,6 +35,16 @@ export const registerSyntheticsEmbeddables = (
         './monitors_overview/monitors_embeddable_factory'
       );
       return getMonitorsEmbeddableFactory(core.getStartServices);
+    }
+  );
+
+  pluginsSetup.embeddable.registerReactEmbeddableFactory(
+    SYNTHETICS_MONITOR_METRICS_EMBEDDABLE,
+    async () => {
+      const { getMonitorMetricsEmbeddableFactory } = await import(
+        './monitor_metrics/monitor_metrics_embeddable_factory'
+      );
+      return getMonitorMetricsEmbeddableFactory(core.getStartServices);
     }
   );
 };

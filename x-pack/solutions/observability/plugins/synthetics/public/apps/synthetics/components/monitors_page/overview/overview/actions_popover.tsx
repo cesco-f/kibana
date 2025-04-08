@@ -4,7 +4,7 @@
  * 2.0; you may not use this file except in compliance with the Elastic License
  * 2.0.
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { i18n } from '@kbn/i18n';
 import {
   EuiPopover,
@@ -20,6 +20,13 @@ import { FETCH_STATUS } from '@kbn/observability-shared-plugin/public';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { useKibana } from '@kbn/kibana-react-plugin/public';
+import { withSuspense } from '@kbn/shared-ux-utility';
+import {
+  LazySavedObjectSaveModalDashboard,
+  SaveModalDashboardProps,
+} from '@kbn/presentation-util-plugin/public';
+import { SYNTHETICS_MONITOR_METRICS_EMBEDDABLE } from '../../../../../embeddables/constants';
+import { ClientPluginsStart } from '../../../../../../plugin';
 import { useCreateSLO } from '../../hooks/use_create_slo';
 import { TEST_SCHEDULED_LABEL } from '../../../monitor_add_edit/form/run_test_btn';
 import { useCanUsePublicLocById } from '../../hooks/use_can_use_public_loc_id';
@@ -38,6 +45,7 @@ import { useMonitorDetailLocator } from '../../../../hooks/use_monitor_detail_lo
 import { NoPermissionsTooltip } from '../../../common/components/permissions';
 
 type PopoverPosition = 'relative' | 'default';
+const SavedObjectSaveModalDashboard = withSuspense(LazySavedObjectSaveModalDashboard);
 
 interface ActionContainerProps {
   boxShadow: string;
@@ -143,6 +151,7 @@ export function ActionsPopover({
     label: monitor.name,
     tags: monitor.tags,
   });
+  const [isDashboardAttachmentReady, setDashboardAttachmentReady] = useState(false);
 
   const [enableLabel, setEnableLabel] = useState(
     monitor.isEnabled ? disableMonitorLabel : enableMonitorLabel
@@ -177,6 +186,30 @@ export function ActionsPopover({
       }
     },
   };
+  const { embeddable } = useKibana<ClientPluginsStart>().services;
+
+  const handleAttachToDashboardSave: SaveModalDashboardProps['onSave'] = useCallback(
+    ({ dashboardId, newTitle, newDescription }) => {
+      const stateTransfer = embeddable!.getStateTransfer();
+      const embeddableInput = {
+        title: newTitle,
+        description: newDescription,
+      };
+
+      const state = {
+        input: embeddableInput,
+        type: SYNTHETICS_MONITOR_METRICS_EMBEDDABLE,
+      };
+
+      const path = dashboardId === 'new' ? '#/create' : `#/view/${dashboardId}`;
+
+      stateTransfer.navigateToWithEmbeddablePackage('dashboards', {
+        state,
+        path,
+      });
+    },
+    [embeddable]
+  );
 
   const alertLoading = alertStatus(monitor.configId) === FETCH_STATUS.LOADING;
   let popoverItems: EuiContextMenuPanelItemDescriptor[] = [
@@ -291,6 +324,14 @@ export function ActionsPopover({
         }
       },
     },
+    {
+      name: addMonitorToDashboardLabel,
+      icon: 'dashboardApp',
+      onClick: () => {
+        setIsPopoverOpen(false);
+        setDashboardAttachmentReady(true);
+      },
+    },
   ];
   if (isInspectView) popoverItems = popoverItems.filter((i) => i !== quickInspectPopoverItem);
 
@@ -331,6 +372,21 @@ export function ActionsPopover({
         </EuiPopover>
       </Container>
       {CreateSLOFlyout}
+      {isDashboardAttachmentReady ? (
+        <SavedObjectSaveModalDashboard
+          objectType={'TMP'}
+          documentInfo={{
+            title: i18n.translate('xpack.synthetics.item.actions.addToDashboard.attachmentTitle', {
+              defaultMessage: 'SLO Overview',
+            }),
+          }}
+          canSaveByReference={false}
+          onClose={() => {
+            setDashboardAttachmentReady(false);
+          }}
+          onSave={handleAttachToDashboardSave}
+        />
+      ) : null}
     </>
   );
 }
@@ -418,6 +474,13 @@ const enableMonitorAlertLabel = i18n.translate(
   'xpack.synthetics.overview.actions.enableLabelDisableAlert',
   {
     defaultMessage: 'Enable status alerts (all locations)',
+  }
+);
+
+const addMonitorToDashboardLabel = i18n.translate(
+  'xpack.synthetics.overview.actions.addToDashboard',
+  {
+    defaultMessage: 'Add to dashboard',
   }
 );
 
