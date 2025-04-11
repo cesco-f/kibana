@@ -24,6 +24,8 @@ export interface SyntheticsMonitorFilterItem {
   label: string;
   values: LabelWithCountValue[];
   field: SyntheticsMonitorFilterField;
+  showLogicalConditionSwitch?: boolean;
+  useLogicalAND?: boolean;
 }
 
 export function getMonitorFilterFields(): SyntheticsMonitorFilterField[] {
@@ -32,7 +34,8 @@ export function getMonitorFilterFields(): SyntheticsMonitorFilterField[] {
 
 export type SyntheticsMonitorFilterChangeHandler = (
   field: SyntheticsMonitorFilterField,
-  selectedValues: string[] | undefined
+  selectedValues: string[] | undefined,
+  isLogicalAND?: boolean
 ) => void;
 
 export function getSyntheticsFilterDisplayValues(

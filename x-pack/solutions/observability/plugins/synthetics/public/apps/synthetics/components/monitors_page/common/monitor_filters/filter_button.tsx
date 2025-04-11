@@ -24,7 +24,7 @@ export const FilterButton = ({
   handleFilterChange: ReturnType<typeof useMonitorFiltersState>['handleFilterChange'];
   loading: boolean;
 }) => {
-  const { label, values, field } = filter;
+  const { label, values, field, showLogicalConditionSwitch, useLogicalAND } = filter;
 
   const [query, setQuery] = useState('');
 
@@ -48,10 +48,14 @@ export const FilterButton = ({
           : values
       }
       setQuery={setQuery}
-      onChange={(selectedValues) => handleFilterChange(field, selectedValues)}
+      onChange={(selectedValues, _, isLogicalAND) =>
+        handleFilterChange(field, selectedValues, isLogicalAND)
+      }
       allowExclusions={false}
       loading={loading}
       asFilterButton={true}
+      showLogicalConditionSwitch={showLogicalConditionSwitch}
+      useLogicalAND={useLogicalAND}
     />
   );
 };

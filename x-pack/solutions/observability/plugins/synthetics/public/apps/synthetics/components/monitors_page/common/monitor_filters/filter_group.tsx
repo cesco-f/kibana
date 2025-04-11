@@ -5,12 +5,16 @@
  * 2.0.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { EuiFilterGroup } from '@elastic/eui';
 import { i18n } from '@kbn/i18n';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useGetUrlParams } from '../../../../hooks';
-import { selectServiceLocationsState } from '../../../../state';
+import {
+  selectServiceLocationsState,
+  setOverviewPageStateAction,
+  updateManagementPageStateAction,
+} from '../../../../state';
 
 import {
   SyntheticsMonitorFilterItem,
@@ -55,6 +59,24 @@ export const FilterGroup = ({
 
   const urlParams = useGetUrlParams();
 
+  const { useLogicalAndFor } = urlParams;
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(
+      setOverviewPageStateAction({
+        useLogicalAndFor,
+      })
+    );
+    dispatch(
+      updateManagementPageStateAction({
+        useLogicalAndFor,
+      })
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, JSON.stringify(useLogicalAndFor)]);
+
   const filters: SyntheticsMonitorFilterItem[] = [
     {
       label: TYPE_LABEL,
@@ -93,6 +115,8 @@ export const FilterGroup = ({
         'tags',
         locations
       ),
+      showLogicalConditionSwitch: true,
+      useLogicalAND: useLogicalAndFor?.includes('tags'),
     },
     {
       label: SCHEDULE_LABEL,
