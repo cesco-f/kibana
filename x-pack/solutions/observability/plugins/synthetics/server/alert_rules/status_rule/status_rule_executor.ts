@@ -277,8 +277,10 @@ export class StatusRuleExecutor {
 
   schedulePendingAlertPerConfigIdPerLocation({
     pendingConfigs,
+    pendingThreshold,
   }: {
     pendingConfigs: AlertPendingStatusConfigs;
+    pendingThreshold: number;
   }) {
     Object.entries(pendingConfigs).forEach(([idWithLocation, statusConfig]) => {
       const alertId = idWithLocation;
@@ -298,14 +300,17 @@ export class StatusRuleExecutor {
         statusConfig,
         locationNames: [monitorSummary.locationName],
         locationIds: [statusConfig.locationId],
+        pendingThreshold,
       });
     });
   }
 
   schedulePendingAlertPerConfigId({
     pendingConfigs,
+    pendingThreshold,
   }: {
     pendingConfigs: AlertPendingStatusConfigs;
+    pendingThreshold: number;
   }) {
     const pendingConfigsById = getConfigsByIds(pendingConfigs);
 
@@ -325,6 +330,7 @@ export class StatusRuleExecutor {
         statusConfig: configs[0],
         locationNames: configs.map(({ locationId, ping }) => ping?.observer.geo.name || locationId),
         locationIds: configs.map(({ locationId }) => locationId),
+        pendingThreshold,
       });
     }
   }
@@ -334,10 +340,18 @@ export class StatusRuleExecutor {
   }: {
     pendingConfigs: AlertPendingStatusConfigs;
   }) => {
-    if (this.params.condition?.groupBy && this.params.condition.groupBy !== 'locationId') {
-      this.schedulePendingAlertPerConfigId({ pendingConfigs });
-    } else {
-      this.schedulePendingAlertPerConfigIdPerLocation({ pendingConfigs });
+    if (this.params.condition?.alertOnNoData) {
+      if (this.params.condition?.groupBy && this.params.condition.groupBy !== 'locationId') {
+        this.schedulePendingAlertPerConfigId({
+          pendingConfigs,
+          pendingThreshold: this.params.condition.alertOnNoData.noOfMissingPings,
+        });
+      } else {
+        this.schedulePendingAlertPerConfigIdPerLocation({
+          pendingConfigs,
+          pendingThreshold: this.params.condition.alertOnNoData.noOfMissingPings,
+        });
+      }
     }
   };
 
@@ -535,6 +549,7 @@ export class StatusRuleExecutor {
     useLatestChecks = false,
     locationNames,
     locationIds,
+    pendingThreshold,
   }: {
     idWithLocation: string;
     alertId: string;
@@ -543,10 +558,11 @@ export class StatusRuleExecutor {
     locationNames: string[];
     locationIds: string[];
   } & (
-    | { statusConfig: AlertStatusMetaData; downThreshold: number }
+    | { statusConfig: AlertStatusMetaData; downThreshold: number; pendingThreshold?: undefined }
     | {
         statusConfig: AlertPendingStatusMetaData;
         downThreshold?: undefined;
+        pendingThreshold: number;
       }
   )) {
     const { configId, locationId } = statusConfig;
@@ -594,7 +610,8 @@ export class StatusRuleExecutor {
       monitorSummary,
       locationNames,
       locationIds,
-      useLatestChecks
+      useLatestChecks,
+      pendingThreshold === undefined ? downThreshold : pendingThreshold
     );
 
     alertsClient.setAlertData({
