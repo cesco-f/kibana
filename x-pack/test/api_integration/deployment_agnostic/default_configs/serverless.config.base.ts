@@ -132,6 +132,7 @@ export function createServerlessTestConfig<T extends DeploymentAgnosticCommonSer
                 '--xpack.uptime.service.devUrl=mockDevUrl',
                 '--xpack.uptime.service.manifestUrl=mockDevUrl',
                 `--xpack.actions.preconfigured=${getPreConfiguredActions(tlsWebhookServers)}`,
+                '--xpack.alerting.rules.minimumScheduleInterval.value="1s"',
               ]
             : []),
         ],
