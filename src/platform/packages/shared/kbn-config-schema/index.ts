@@ -54,6 +54,7 @@ import {
   StreamType,
   UnionTypeOptions,
   Lazy,
+  UUIDType,
 } from './src/types';
 
 export type { AnyType, ConditionalType, TypeOf, Props, SchemaStructureEntry, NullableProps };
@@ -86,6 +87,10 @@ function string(options?: StringOptions): Type<string> {
 
 function uri(options?: URIOptions): Type<string> {
   return new URIType(options);
+}
+
+function uuid(): Type<string> {
+  return new UUIDType();
 }
 
 function literal<T extends string | number | boolean | null>(value: T): Type<T> {
@@ -430,6 +435,7 @@ export const schema = {
   siblingRef,
   string,
   uri,
+  uuid,
 };
 
 export type Schema = typeof schema;

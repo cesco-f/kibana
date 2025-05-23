@@ -49,3 +49,4 @@ export { NeverType } from './never_type';
 export type { IpOptions } from './ip_type';
 export { IpType } from './ip_type';
 export { Lazy } from './lazy';
+export { UUIDType } from './uuid_type';
