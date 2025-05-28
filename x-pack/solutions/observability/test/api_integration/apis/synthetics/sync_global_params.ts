@@ -33,9 +33,7 @@ export const LOCAL_LOCATION = {
 };
 
 export default function ({ getService }: FtrProviderContext) {
-  // FLAKY: https://github.com/elastic/kibana/issues/221290
-  // Failing: See https://github.com/elastic/kibana/issues/221290
-  describe.skip('SyncGlobalParams', function () {
+  describe('SyncGlobalParams', function () {
     this.tags('skipCloud');
     const supertestAPI = getService('supertest');
     const kServer = getService('kibanaServer');
@@ -175,6 +173,10 @@ export default function ({ getService }: FtrProviderContext) {
         .send({ key: 'test', value: 'http://proxy.com' });
 
       expect(apiResponse.status).eql(200);
+
+      // Wait for the sync global params task to complete
+      // We can't check the task status directly, so we use a fixed delay
+      await new Promise((resolve) => setTimeout(resolve, 3000)); // 3 seconds
     });
 
     it('get list of params', async () => {
