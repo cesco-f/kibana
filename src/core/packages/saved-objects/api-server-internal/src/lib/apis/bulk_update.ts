@@ -310,7 +310,8 @@ export const performBulkUpdate = async <T>(
         ...migrated!,
         id,
         type,
-        namespace,
+        // DO NOT MERGE THIS CHANGE, THIS CHANGE SHOULD COME FROM A KIBANA-CORE PR
+        namespace: getNamespaceId(objectNamespace),
         namespaces,
         attributes: updatedAttributes,
         updated_at: time,
