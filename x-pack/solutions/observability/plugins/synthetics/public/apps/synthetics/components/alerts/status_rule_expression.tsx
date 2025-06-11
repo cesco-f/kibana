@@ -35,7 +35,7 @@ interface Props {
 export const StatusRuleExpression: React.FC<Props> = ({
   ruleParams,
   setRuleParams,
-  showAlertOnNoDataSwitch = false,
+  showAlertOnNoDataSwitch = true,
 }) => {
   const condition = ruleParams.condition ?? DEFAULT_CONDITION;
   const downThreshold = condition?.downThreshold ?? DEFAULT_CONDITION.downThreshold;
