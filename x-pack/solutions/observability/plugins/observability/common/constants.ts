@@ -17,6 +17,11 @@ export const INVALID_EQUATION_REGEX = /[^A-Z|+|\-|\s|\d+|\.|\(|\)|\/|\*|>|<|=|\?
 export const ALERT_STATUS_ALL = 'all';
 export const ALERTS_URL_STORAGE_KEY = '_a';
 
+/**
+ * EBT events
+ */
+export const ALERT_DETAILS_PAGE_VIEW_EVENT_TYPE = 'alert_details_page_view';
+
 export const observabilityAlertFeatureIds: ValidFeatureId[] = [
   AlertConsumers.APM,
   AlertConsumers.INFRASTRUCTURE,

@@ -95,6 +95,7 @@ import {
   CaseDetailsLocatorDefinition,
   CasesOverviewLocatorDefinition,
 } from '../common/locators/cases';
+import { ALERT_DETAILS_PAGE_VIEW_EVENT_TYPE } from '../common/constants';
 
 export interface ConfigSchema {
   unsafe: {
@@ -244,6 +245,19 @@ export class Plugin
     this.observabilityRuleTypeRegistry = createObservabilityRuleTypeRegistry(
       pluginsSetup.triggersActionsUi.ruleTypeRegistry
     );
+
+    coreSetup.analytics.registerEventType({
+      eventType: ALERT_DETAILS_PAGE_VIEW_EVENT_TYPE,
+      schema: {
+        rule_type: {
+          type: 'keyword',
+          _meta: {
+            description: 'Rule type ID of the alert whose details page was viewed',
+            optional: false,
+          },
+        },
+      },
+    });
 
     const rulesLocator = pluginsSetup.share.url.locators.create(new RulesLocatorDefinition());
     pluginsSetup.share.url.locators.create(CaseDetailsLocatorDefinition());
