@@ -1089,6 +1089,64 @@ paths:
           description: If the `label` is shorter than 1 character the API will return a 400 Bad Request response with a corresponding error message.
         '404':
           description: If the private location with the specified ID does not exist, the API will return a 404 Not Found response.
+  /api/synthetics/monitor/test/{monitorId}:
+    post:
+      summary: Trigger an on-demand test run for a monitor
+      operationId: post-synthetics-monitor-test
+      description: >
+        Trigger an immediate test execution for the specified monitor.
+        This endpoint mirrors the behaviour of the internal endpoint
+        `/internal/synthetics/service/monitors/trigger/{monitorId}` but is
+        available publicly. The response includes the generated `testRunId`,
+        monitor schedule, locations, and a copy of the monitor configuration.
+
+        You must have `all` privileges for the Synthetics feature in the
+        Observability section of the Kibana feature privileges.
+      tags:
+        - synthetics
+      parameters:
+        - in: path
+          name: monitorId
+          required: true
+          description: The ID (config_id) of the monitor to test.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Test run triggered successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - testRunId
+                  - schedule
+                  - locations
+                  - configId
+                  - monitor
+                properties:
+                  testRunId:
+                    type: string
+                    description: Unique identifier for the triggered test run.
+                  schedule:
+                    type: object
+                    description: The monitor schedule.
+                    additionalProperties: true
+                  locations:
+                    type: array
+                    description: An array of locations where the monitor will run.
+                    items:
+                      type: object
+                      additionalProperties: true
+                  configId:
+                    type: string
+                    description: The ID of the monitor that was tested.
+                  monitor:
+                    type: object
+                    description: The full monitor configuration at the time of the test.
+                    additionalProperties: true
+        '404':
+          description: Monitor not found.
 components:
   schemas:
     commonMonitorFields:
