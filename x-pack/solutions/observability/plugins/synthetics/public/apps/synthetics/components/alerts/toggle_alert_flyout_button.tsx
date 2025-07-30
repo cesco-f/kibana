@@ -40,7 +40,11 @@ export const ToggleAlertFlyoutButton = () => {
   const { EditAlertFlyout, loading, NewRuleFlyout } = useSyntheticsRules(isOpen);
   const { loaded, data: monitors } = useSelector(selectMonitorListState);
 
-  const hasMonitors = loaded && monitors.absoluteTotal && monitors.absoluteTotal > 0;
+  const hasMonitors =
+    loaded &&
+    monitors.absoluteTotal &&
+    monitors.absoluteTotal > 0 &&
+    application.capabilities.uptime['alerting:save'];
 
   const panels: EuiContextMenuPanelDescriptor[] = [
     {

@@ -78,6 +78,33 @@ const canManagePrivateLocationsPrivilege: SubFeaturePrivilegeGroupConfig = {
   ],
 };
 
+const alertsPrivilege: SubFeaturePrivilegeGroupConfig = {
+  groupType: 'independent' as SubFeaturePrivilegeGroupType,
+  privileges: [
+    {
+      id: 'uptime-alerts',
+      api: ['uptime-alerts'],
+      name: i18n.translate('xpack.synthetics.features.alerts.label', {
+        defaultMessage: 'Alerts',
+      }),
+      includeIn: 'all',
+      savedObject: {
+        all: [],
+        read: [],
+      },
+      alerting: {
+        rule: {
+          all: alertingFeatures,
+        },
+        alert: {
+          all: alertingFeatures,
+        },
+      },
+      ui: ['alerting:save'],
+    },
+  ],
+};
+
 export const syntheticsFeature = {
   id: PLUGIN.ID,
   name: PLUGIN.NAME,
@@ -150,7 +177,7 @@ export const syntheticsFeature = {
       management: {
         insightsAndAlerting: ['triggersActions'],
       },
-      ui: ['show', 'alerting:save'],
+      ui: ['show'],
     },
   },
   subFeatures: [
@@ -173,6 +200,16 @@ export const syntheticsFeature = {
           'This feature allows you to manage your private locations, for example adding, or deleting them.',
       }),
       privilegeGroups: [canManagePrivateLocationsPrivilege],
+    },
+    {
+      name: i18n.translate('xpack.synthetics.features.app.alerts', {
+        defaultMessage: 'Alerts',
+      }),
+      description: i18n.translate('xpack.synthetics.features.app.alertsDescription', {
+        defaultMessage:
+          'This feature allows users to create, modify, and manage all synthetics and uptime related alerts and rules.',
+      }),
+      privilegeGroups: [alertsPrivilege],
     },
   ],
 };

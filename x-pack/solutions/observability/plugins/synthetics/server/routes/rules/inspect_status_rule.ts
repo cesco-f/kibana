@@ -17,6 +17,7 @@ import { SYNTHETICS_API_URLS } from '../../../common/constants';
 export const syntheticsInspectStatusRuleRoute: SyntheticsRestApiRouteFactory = () => ({
   method: 'POST',
   path: SYNTHETICS_API_URLS.INSPECT_STATUS_RULE,
+  isAlertRoute: true,
   validate: {
     body: syntheticsMonitorStatusRuleParamsSchema,
   },
