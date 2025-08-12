@@ -6,7 +6,7 @@
  */
 import { AiopsPluginStart } from '@kbn/aiops-plugin/public/types';
 import { ApmSourceAccessPluginStart } from '@kbn/apm-sources-access-plugin/public';
-import type { CasesPublicStart, type CasesPublicSetup } from '@kbn/cases-plugin/public';
+import type { CasesPublicStart, CasesPublicSetup } from '@kbn/cases-plugin/public';
 import type { ChartsPluginStart } from '@kbn/charts-plugin/public';
 import type { CloudStart } from '@kbn/cloud-plugin/public';
 import { DashboardStart } from '@kbn/dashboard-plugin/public';
