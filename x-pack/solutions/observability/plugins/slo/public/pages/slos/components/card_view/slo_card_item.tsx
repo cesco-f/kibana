@@ -182,7 +182,7 @@ export function SloCardChart({
 }: {
   badges: React.ReactNode;
   slo: SLOWithSummaryResponse;
-  historicalSliData?: Array<{ key?: number; value?: number }>;
+  historicalSliData: Array<{ key?: number; value?: number }>;
   onClick?: () => void;
 }) {
   const {
