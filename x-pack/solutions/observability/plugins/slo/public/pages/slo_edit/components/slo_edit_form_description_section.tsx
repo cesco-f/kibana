@@ -17,18 +17,23 @@ import {
 import { i18n } from '@kbn/i18n';
 import React from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
+import { DashboardsCombobox } from '@kbn/response-ops-rule-form/src/rule_details/dashboards_combobox';
+import { useKibana } from '../../../hooks/use_kibana';
 import { useFetchSLOSuggestions } from '../hooks/use_fetch_suggestions';
 import type { CreateSLOForm } from '../types';
 import { OptionalText } from './common/optional_text';
 import { MAX_WIDTH } from '../constants';
 
 export function SloEditFormDescriptionSection() {
-  const { control, getFieldState } = useFormContext<CreateSLOForm>();
+  const { control, getFieldState, setValue } = useFormContext<CreateSLOForm>();
   const sloNameId = useGeneratedHtmlId({ prefix: 'sloName' });
   const descriptionId = useGeneratedHtmlId({ prefix: 'sloDescription' });
   const tagsId = useGeneratedHtmlId({ prefix: 'tags' });
 
   const { suggestions } = useFetchSLOSuggestions();
+
+  const { services } = useKibana();
+  const contentManagement = services.contentManagement;
 
   return (
     <EuiPanel
@@ -98,6 +103,7 @@ export function SloEditFormDescriptionSection() {
         label={i18n.translate('xpack.slo.sloEdit.tags.label', {
           defaultMessage: 'Tags',
         })}
+        labelAppend={<OptionalText />}
       >
         <Controller
           name="tags"
@@ -142,6 +148,35 @@ export function SloEditFormDescriptionSection() {
               }}
               isClearable
               data-test-subj="sloEditTagsSelector"
+            />
+          )}
+        />
+      </EuiFormRow>
+      <EuiFormRow
+        fullWidth
+        label={i18n.translate('xpack.slo.sloEdit.dashboards.label', {
+          defaultMessage: 'Linked dashboards',
+        })}
+        labelAppend={<OptionalText />}
+      >
+        <Controller
+          name="artifacts.dashboards"
+          control={control}
+          defaultValue={undefined}
+          rules={{ required: false }}
+          render={({ field: { value } }) => (
+            <DashboardsCombobox
+              contentManagement={contentManagement}
+              selectedDashboards={value ?? []}
+              onChange={(dashboards) => {
+                setValue(
+                  'artifacts.dashboards',
+                  dashboards.flatMap((dashboard) => ({ id: dashboard.value ?? '' }))
+                );
+              }}
+              placeholder={i18n.translate('xpack.slo.sloEdit.dashboards.placeholder', {
+                defaultMessage: 'Add dashboards',
+              })}
             />
           )}
         />
