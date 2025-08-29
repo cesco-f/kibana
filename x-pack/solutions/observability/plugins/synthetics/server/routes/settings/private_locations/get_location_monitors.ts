@@ -45,11 +45,13 @@ export const getLocationMonitors: SyntheticsRestApiRouteFactory<Payload> = () =>
   path: SYNTHETICS_API_URLS.PRIVATE_LOCATIONS_MONITORS,
 
   validate: {},
-  handler: async ({ server, savedObjectsClient, syntheticsMonitorClient }) => {
+  handler: async ({ server, savedObjectsClient, syntheticsMonitorClient, spaceId }) => {
     const soClient = server.coreStart.savedObjects.createInternalRepository();
     const { locations } = await getPrivateLocationsAndAgentPolicies(
       savedObjectsClient,
-      syntheticsMonitorClient
+      syntheticsMonitorClient,
+      false,
+      spaceId
     );
 
     const locationMonitors = await soClient.find({

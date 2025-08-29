@@ -197,7 +197,8 @@ export const parseLocationFilter = async (
     syntheticsMonitorClient,
     savedObjectsClient,
     server,
-  }: Pick<RouteContext, 'syntheticsMonitorClient' | 'savedObjectsClient' | 'server'>,
+    spaceId,
+  }: Pick<RouteContext, 'syntheticsMonitorClient' | 'savedObjectsClient' | 'server' | 'spaceId'>,
   locations?: string | string[]
 ) => {
   if (!locations || locations?.length === 0) {
@@ -209,6 +210,7 @@ export const parseLocationFilter = async (
     savedObjectsClient,
     server,
     excludeAgentPolicies: true,
+    spaceId,
   });
 
   if (Array.isArray(locations)) {

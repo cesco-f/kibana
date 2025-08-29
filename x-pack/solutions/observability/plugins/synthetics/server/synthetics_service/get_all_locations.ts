@@ -16,11 +16,13 @@ export async function getAllLocations({
   savedObjectsClient,
   server,
   excludeAgentPolicies = false,
+  spaceId,
 }: {
   server: SyntheticsServerSetup;
   syntheticsMonitorClient: SyntheticsMonitorClient;
   savedObjectsClient: SavedObjectsClientContract;
   excludeAgentPolicies?: boolean;
+  spaceId: string;
 }) {
   try {
     const [
@@ -30,7 +32,8 @@ export async function getAllLocations({
       getPrivateLocationsAndAgentPolicies(
         savedObjectsClient,
         syntheticsMonitorClient,
-        excludeAgentPolicies
+        excludeAgentPolicies,
+        spaceId
       ),
       getServicePublicLocations(server, syntheticsMonitorClient),
     ]);

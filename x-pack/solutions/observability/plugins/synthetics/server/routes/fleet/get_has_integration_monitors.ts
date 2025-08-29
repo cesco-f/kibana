@@ -11,11 +11,12 @@ export const getHasIntegrationMonitorsRoute: SyntheticsRestApiRouteFactory = () 
   method: 'GET',
   path: SYNTHETICS_API_URLS.SYNTHETICS_HAS_INTEGRATION_MONITORS,
   validate: {},
-  handler: async ({ savedObjectsClient, server }): Promise<any> => {
+  handler: async ({ savedObjectsClient, server, spaceId }): Promise<any> => {
     const monitors = await server.fleet.packagePolicyService.list(savedObjectsClient, {
       kuery:
         'ingest-package-policies.package.name:synthetics and not ingest-package-policies.is_managed:true',
       perPage: 1,
+      spaceId,
     });
     return {
       hasIntegrationMonitors: monitors.total > 0,

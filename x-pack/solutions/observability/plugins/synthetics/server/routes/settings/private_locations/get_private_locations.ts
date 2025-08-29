@@ -31,7 +31,8 @@ export const getPrivateLocationsRoute: SyntheticsRestApiRouteFactory<
     },
   },
   handler: async (routeContext) => {
-    const { savedObjectsClient, syntheticsMonitorClient, request, response, server } = routeContext;
+    const { savedObjectsClient, syntheticsMonitorClient, request, response, server, spaceId } =
+      routeContext;
 
     const internalSOClient = server.coreStart.savedObjects.createInternalRepository();
     await migrateLegacyPrivateLocations(internalSOClient, server.logger);
@@ -40,7 +41,9 @@ export const getPrivateLocationsRoute: SyntheticsRestApiRouteFactory<
 
     const { locations, agentPolicies } = await getPrivateLocationsAndAgentPolicies(
       savedObjectsClient,
-      syntheticsMonitorClient
+      syntheticsMonitorClient,
+      false,
+      spaceId
     );
     const list = allLocationsToClientContract({ locations }, agentPolicies);
     if (!id) return list;
@@ -59,14 +62,15 @@ export const getPrivateLocationsRoute: SyntheticsRestApiRouteFactory<
 export const getPrivateLocationsAndAgentPolicies = async (
   savedObjectsClient: SavedObjectsClientContract,
   syntheticsMonitorClient: SyntheticsMonitorClient,
-  excludeAgentPolicies = false
+  excludeAgentPolicies = false,
+  spaceId: string
 ): Promise<SyntheticsPrivateLocationsAttributes & { agentPolicies: AgentPolicyInfo[] }> => {
   try {
     const [privateLocations, agentPolicies] = await Promise.all([
       getPrivateLocations(savedObjectsClient),
       excludeAgentPolicies
         ? new Promise<void>((resolve) => resolve())
-        : syntheticsMonitorClient.privateLocationAPI.getAgentPolicies(),
+        : syntheticsMonitorClient.privateLocationAPI.getAgentPolicies(spaceId),
     ]);
     return {
       locations: privateLocations || [],

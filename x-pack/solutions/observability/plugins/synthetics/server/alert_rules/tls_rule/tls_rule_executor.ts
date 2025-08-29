@@ -101,6 +101,7 @@ export class TLSRuleExecutor {
         savedObjectsClient: this.soClient,
         server: this.server,
         syntheticsMonitorClient: this.syntheticsMonitorClient,
+        spaceId: this.spaceId,
       },
       this.params.locations
     );

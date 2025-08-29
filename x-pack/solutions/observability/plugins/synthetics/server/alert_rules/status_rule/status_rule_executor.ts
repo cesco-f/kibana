@@ -129,6 +129,7 @@ export class StatusRuleExecutor {
         savedObjectsClient: this.soClient,
         server: this.server,
         syntheticsMonitorClient: this.syntheticsMonitorClient,
+        spaceId: this.options.spaceId,
       },
       this.params.locations
     );

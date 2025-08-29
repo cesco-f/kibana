@@ -34,6 +34,7 @@ export const deletePrivateLocationRoute: SyntheticsRestApiRouteFactory<undefined
       response,
       server,
       monitorConfigRepository,
+      spaceId,
     } = routeContext;
     const internalSOClient = server.coreStart.savedObjects.createInternalRepository();
 
@@ -44,7 +45,8 @@ export const deletePrivateLocationRoute: SyntheticsRestApiRouteFactory<undefined
     const { locations } = await getPrivateLocationsAndAgentPolicies(
       savedObjectsClient,
       syntheticsMonitorClient,
-      true
+      true,
+      spaceId
     );
 
     if (!locations.find((loc) => loc.id === locationId)) {

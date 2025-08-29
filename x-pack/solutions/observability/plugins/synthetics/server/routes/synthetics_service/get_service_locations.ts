@@ -20,6 +20,7 @@ export const getServiceLocationsRoute: SyntheticsRestApiRouteFactory = () => ({
     server,
     savedObjectsClient,
     syntheticsMonitorClient,
+    spaceId,
   }): Promise<any> => {
     const elasticManagedLocationsEnabled =
       Boolean(
@@ -35,6 +36,7 @@ export const getServiceLocationsRoute: SyntheticsRestApiRouteFactory = () => ({
         server,
         syntheticsMonitorClient,
         savedObjectsClient,
+        spaceId,
       });
 
       return {
@@ -43,7 +45,12 @@ export const getServiceLocationsRoute: SyntheticsRestApiRouteFactory = () => ({
       };
     } else {
       const { locations: privateLocations, agentPolicies } =
-        await getPrivateLocationsAndAgentPolicies(savedObjectsClient, syntheticsMonitorClient);
+        await getPrivateLocationsAndAgentPolicies(
+          savedObjectsClient,
+          syntheticsMonitorClient,
+          false,
+          spaceId
+        );
 
       const result = allLocationsToClientContract({ locations: privateLocations }, agentPolicies);
       return {

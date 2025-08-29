@@ -69,7 +69,7 @@ export class PrivateLocationRepository {
         perPage: 10000,
         namespaces: spaces,
       }),
-      await getAgentPoliciesAsInternalUser({ server }),
+      await getAgentPoliciesAsInternalUser({ server, spaceId: this.routeContext.spaceId }),
     ]);
 
     const locations = data.saved_objects.map((loc) => ({
