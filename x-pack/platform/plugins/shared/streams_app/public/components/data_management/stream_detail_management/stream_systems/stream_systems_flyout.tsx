@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   EuiButton,
   EuiButtonEmpty,
@@ -33,15 +33,22 @@ export const StreamSystemsFlyout = ({
   closeFlyout,
   isLoading,
   definition,
+  setSystems,
 }: {
   isLoading: boolean;
   systems: System[];
   closeFlyout: () => void;
   definition: Streams.all.Definition;
+  setSystems: React.Dispatch<React.SetStateAction<System[]>>;
 }) => {
-  const [selectedSystems, setSelectedSystems] = useState<System[]>([]);
+  const [selectedSystemNames, setSelectedSystemNames] = useState<Set<string>>(new Set());
   const { addSystemsToStream } = useStreamSystemsApi(definition);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  const selectedSystems = useMemo(
+    () => systems.filter((s) => selectedSystemNames.has(s.name)),
+    [systems, selectedSystemNames]
+  );
 
   return (
     <EuiFlyout
@@ -73,9 +80,10 @@ export const StreamSystemsFlyout = ({
         {!isLoading ? (
           <StreamSystemsTable
             systems={systems}
-            selectedSystems={selectedSystems}
-            setSelectedSystems={setSelectedSystems}
+            selectedSystemNames={selectedSystemNames}
+            setSelectedSystemNames={setSelectedSystemNames}
             definition={definition}
+            setSystems={setSystems}
           />
         ) : (
           <LoadingState />
@@ -109,7 +117,7 @@ export const StreamSystemsFlyout = ({
                 });
               }}
               fill
-              isDisabled={selectedSystems.length === 0}
+              isDisabled={selectedSystemNames.size === 0}
             >
               <FormattedMessage
                 id="xpack.streams.streamSystemsFlyout.addToStreamButton"

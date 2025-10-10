@@ -6,11 +6,10 @@
  */
 
 import type { ReactNode } from 'react';
-import { useEffect } from 'react';
-import {} from 'react';
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import type { EuiBasicTableColumn } from '@elastic/eui';
 import { EuiBasicTable, EuiButtonIcon, EuiScreenReaderOnly } from '@elastic/eui';
+import { v4 as uuidv4 } from 'uuid';
 import { type Streams, type System } from '@kbn/streams-schema';
 import { i18n } from '@kbn/i18n';
 import { ConditionPanel } from '../../shared';
@@ -20,24 +19,39 @@ import { TableTitle } from './table_title';
 
 export function StreamSystemsTable({
   definition,
-  systems: initialSystems,
-  selectedSystems,
-  setSelectedSystems,
+  systems,
+  selectedSystemNames,
+  setSelectedSystemNames,
+  setSystems,
 }: {
   definition: Streams.all.Definition;
   systems: System[];
-  selectedSystems: System[];
-  setSelectedSystems: React.Dispatch<React.SetStateAction<System[]>>;
+  selectedSystemNames: Set<string>;
+  setSelectedSystemNames: React.Dispatch<React.SetStateAction<Set<string>>>;
+  setSystems: React.Dispatch<React.SetStateAction<System[]>>;
 }) {
-  const [itemIdToExpandedRowMap, setItemIdToExpandedRowMap] = useState<Record<string, ReactNode>>(
-    {}
+  const [expandedSystemNames, setExpandedSystemNames] = useState<Set<string>>(new Set());
+
+  const itemIdToExpandedRowMap = useMemo(() => {
+    const map: Record<string, ReactNode> = {};
+    systems.forEach((s) => {
+      if (expandedSystemNames.has(s.name)) {
+        map[s.name] = <SystemDetailExpanded system={s} setSystems={setSystems} />;
+      }
+    });
+    return map;
+  }, [expandedSystemNames, systems, setSystems]);
+
+  const selectedSystems = useMemo(() => {
+    return systems.filter((s) => selectedSystemNames.has(s.name));
+  }, [systems, selectedSystemNames]);
+
+  const onSelectionChange = useCallback(
+    (newSelectedSystems: System[]) => {
+      setSelectedSystemNames(new Set(newSelectedSystems.map((s) => s.name)));
+    },
+    [setSelectedSystemNames]
   );
-
-  const [systems, setSystems] = useState<System[]>(initialSystems);
-
-  useEffect(() => {
-    setSystems(initialSystems);
-  }, [initialSystems]);
 
   const columns: Array<EuiBasicTableColumn<System>> = [
     {
@@ -93,8 +107,7 @@ export function StreamSystemsTable({
           type: 'icon',
           icon: 'copy',
           onClick: (system) => {
-            // clone the system
-            setSystems(systems.concat({ ...system, name: `${system.name}-copy` }));
+            setSystems((prev) => prev.concat({ ...system, name: `${system.name}-${uuidv4()}` }));
           },
         },
         {
@@ -108,15 +121,7 @@ export function StreamSystemsTable({
           type: 'icon',
           icon: 'pencil',
           onClick: (system) => {
-            // open expanded row
-            setItemIdToExpandedRowMap(
-              Object.keys(itemIdToExpandedRowMap).includes(system.name)
-                ? itemIdToExpandedRowMap
-                : {
-                    ...itemIdToExpandedRowMap,
-                    [system.name]: <SystemDetailExpanded system={system} />,
-                  }
-            );
+            setExpandedSystemNames((prev) => new Set(prev).add(system.name));
           },
         },
         {
@@ -133,32 +138,36 @@ export function StreamSystemsTable({
           type: 'icon',
           icon: 'trash',
           onClick: (system) => {
-            // delete the system
             setSystems(systems.filter((selectedSystem) => selectedSystem.name !== system.name));
-            setSelectedSystems(
-              selectedSystems.filter((selectedSystem) => selectedSystem.name !== system.name)
+            setSelectedSystemNames(
+              new Set(
+                Array.from(selectedSystemNames).filter(
+                  (selectedSystemName) => selectedSystemName !== system.name
+                )
+              )
             );
-            const itemIdToExpandedRowMapValues = { ...itemIdToExpandedRowMap };
-            if (itemIdToExpandedRowMapValues[system.name]) {
-              delete itemIdToExpandedRowMapValues[system.name];
-              setItemIdToExpandedRowMap(itemIdToExpandedRowMapValues);
-            }
+            setExpandedSystemNames((prev) => {
+              const next = new Set(prev);
+              next.delete(system.name);
+              return next;
+            });
           },
         },
       ],
     },
   ];
 
-  const toggleDetails = (system: System) => {
-    const itemIdToExpandedRowMapValues = { ...itemIdToExpandedRowMap };
-
-    if (itemIdToExpandedRowMapValues[system.name]) {
-      delete itemIdToExpandedRowMapValues[system.name];
-    } else {
-      itemIdToExpandedRowMapValues[system.name] = <SystemDetailExpanded system={system} />;
-    }
-    setItemIdToExpandedRowMap(itemIdToExpandedRowMapValues);
-  };
+  const toggleDetails = useCallback((system: System) => {
+    setExpandedSystemNames((prev) => {
+      const next = new Set(prev);
+      if (next.has(system.name)) {
+        next.delete(system.name);
+      } else {
+        next.add(system.name);
+      }
+      return next;
+    });
+  }, []);
 
   const columnsWithExpandingRowToggle: Array<EuiBasicTableColumn<System>> = [
     {
@@ -176,13 +185,13 @@ export function StreamSystemsTable({
       ),
       mobileOptions: { header: false },
       render: (system: System) => {
-        const itemIdToExpandedRowMapValues = { ...itemIdToExpandedRowMap };
+        const isExpanded = expandedSystemNames.has(system.name);
 
         return (
           <EuiButtonIcon
             onClick={() => toggleDetails(system)}
             aria-label={
-              itemIdToExpandedRowMapValues[system.name]
+              isExpanded
                 ? i18n.translate('xpack.streams.streamSystemsTable.columns.collapseDetails', {
                     defaultMessage: 'Collapse details',
                   })
@@ -190,7 +199,7 @@ export function StreamSystemsTable({
                     defaultMessage: 'Expand details',
                   })
             }
-            iconType={itemIdToExpandedRowMapValues[system.name] ? 'arrowDown' : 'arrowRight'}
+            iconType={isExpanded ? 'arrowDown' : 'arrowRight'}
           />
         );
       },
@@ -216,7 +225,10 @@ export function StreamSystemsTable({
         itemId="name"
         itemIdToExpandedRowMap={itemIdToExpandedRowMap}
         columns={columnsWithExpandingRowToggle}
-        selection={{ selected: selectedSystems, onSelectionChange: setSelectedSystems }}
+        selection={{
+          selected: selectedSystems,
+          onSelectionChange,
+        }}
       />
     </>
   );

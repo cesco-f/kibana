@@ -5,16 +5,38 @@
  * 2.0.
  */
 import React, { useState } from 'react';
-import { EuiMarkdownEditor, EuiTitle, EuiSpacer } from '@elastic/eui';
+import { EuiMarkdownEditor, EuiTitle, EuiSpacer, EuiFlexGroup, EuiButtonIcon } from '@elastic/eui';
 import type { System } from '@kbn/streams-schema';
 import { i18n } from '@kbn/i18n';
-import { ConditionPanel } from '../../shared';
+import type { Condition } from '@kbn/streamlang';
+import { EditableConditionPanel } from '../../shared/condition_display';
 
-export const SystemDetailExpanded = ({ system }: { system: System }) => {
-  const [value, setValue] = useState(system.description);
+export const SystemDetailExpanded = ({
+  system,
+  setSystems,
+}: {
+  system: System;
+  setSystems: React.Dispatch<React.SetStateAction<System[]>>;
+}) => {
+  const [isEditingCondition, setIsEditingCondition] = useState(false);
+  const toggleIsEditingCondition = () => {
+    setIsEditingCondition((v) => !v);
+  };
+
+  const setSystem = (updated: System) => {
+    setSystems((prev) => prev.map((s) => (s.name === updated.name ? updated : s)));
+  };
+
+  const handleConditionChange = (newFilter: Condition) => {
+    setSystem({ ...system, filter: newFilter });
+  };
+
+  const handleDescriptionChange = (newDescription: string) => {
+    setSystem({ ...system, description: newDescription });
+  };
 
   return (
-    <div>
+    <EuiFlexGroup direction="column">
       <EuiTitle size="xs">
         <h3>
           {i18n.translate('xpack.streams.streamDetailView.systemDetailExpanded.description', {
@@ -29,21 +51,39 @@ export const SystemDetailExpanded = ({ system }: { system: System }) => {
             defaultMessage: 'System description markdown editor',
           }
         )}
-        value={value}
-        onChange={setValue}
+        value={system.description}
+        onChange={handleDescriptionChange}
         height={400}
         readOnly={false}
         initialViewMode="viewing"
       />
       <EuiSpacer size="m" />
-      <EuiTitle size="xs">
-        <h3>
-          {i18n.translate('xpack.streams.streamDetailView.systemDetailExpanded.filter', {
-            defaultMessage: 'Filter',
-          })}
-        </h3>
-      </EuiTitle>
-      <ConditionPanel condition={system.filter} />
-    </div>
+      <EuiFlexGroup direction="column" gutterSize="none">
+        <EuiFlexGroup justifyContent="flexStart" gutterSize="xs" alignItems="center">
+          <EuiTitle size="xs">
+            <h3>
+              {i18n.translate('xpack.streams.streamDetailView.systemDetailExpanded.filter', {
+                defaultMessage: 'Filter',
+              })}
+            </h3>
+          </EuiTitle>
+          <EuiButtonIcon
+            iconType="pencil"
+            onClick={toggleIsEditingCondition}
+            aria-label={i18n.translate(
+              'xpack.streams.streamDetailView.systemDetailExpanded.filter.edit',
+              {
+                defaultMessage: 'Edit filter',
+              }
+            )}
+          />
+        </EuiFlexGroup>
+        <EditableConditionPanel
+          condition={system.filter}
+          isEditingCondition={isEditingCondition}
+          setCondition={handleConditionChange}
+        />
+      </EuiFlexGroup>
+    </EuiFlexGroup>
   );
 };

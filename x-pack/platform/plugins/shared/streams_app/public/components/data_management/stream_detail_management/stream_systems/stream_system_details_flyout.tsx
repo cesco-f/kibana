@@ -9,6 +9,7 @@ import React from 'react';
 import {
   EuiButton,
   EuiButtonEmpty,
+  EuiButtonIcon,
   EuiFlexGroup,
   EuiFlexItem,
   EuiFlyout,
@@ -22,7 +23,7 @@ import {
 import type { Streams, System } from '@kbn/streams-schema';
 import { FormattedMessage } from '@kbn/i18n-react';
 import { i18n } from '@kbn/i18n';
-import { ConditionPanel } from '../../shared';
+import { EditableConditionPanel } from '../../shared';
 import { SystemEventsData } from './system_events_data';
 import { useStreamSystemsApi } from '../../../../hooks/use_stream_systems_api';
 
@@ -38,12 +39,18 @@ export const StreamSystemDetailsFlyout = ({
   const [systemDescription, setSystemDescription] = React.useState(system.description);
   const { upsertQuery } = useStreamSystemsApi(definition);
   const [isUpdating, setIsUpdating] = React.useState(false);
+  const [systemFilter, setSystemFilter] = React.useState(system.filter);
+  const [isEditingCondition, setIsEditingCondition] = React.useState(false);
+
+  const toggleIsEditingCondition = () => {
+    setIsEditingCondition((v) => !v);
+  };
 
   const updateSystem = () => {
     setIsUpdating(true);
     upsertQuery(system.name, {
       description: systemDescription,
-      filter: system.filter,
+      filter: systemFilter,
     }).finally(() => {
       setIsUpdating(false);
       closeFlyout();
@@ -90,14 +97,32 @@ export const StreamSystemDetailsFlyout = ({
             initialViewMode="viewing"
           />
           <EuiSpacer size="m" />
-          <EuiTitle size="xs">
-            <h3>
-              {i18n.translate('xpack.streams.streamDetailView.systemDetailExpanded.filter', {
-                defaultMessage: 'Filter',
-              })}
-            </h3>
-          </EuiTitle>
-          <ConditionPanel condition={system.filter} />
+          <EuiFlexGroup direction="column" gutterSize="none">
+            <EuiFlexGroup justifyContent="flexStart" gutterSize="xs" alignItems="center">
+              <EuiTitle size="xs">
+                <h3>
+                  {i18n.translate('xpack.streams.streamDetailView.systemDetailExpanded.filter', {
+                    defaultMessage: 'Filter',
+                  })}
+                </h3>
+              </EuiTitle>
+              <EuiButtonIcon
+                iconType="pencil"
+                onClick={toggleIsEditingCondition}
+                aria-label={i18n.translate(
+                  'xpack.streams.streamDetailView.systemDetailExpanded.filter.edit',
+                  {
+                    defaultMessage: 'Edit filter',
+                  }
+                )}
+              />
+            </EuiFlexGroup>
+            <EditableConditionPanel
+              condition={systemFilter}
+              isEditingCondition={isEditingCondition}
+              setCondition={setSystemFilter}
+            />
+          </EuiFlexGroup>
           <EuiSpacer size="m" />
           <SystemEventsData system={system} />
         </div>

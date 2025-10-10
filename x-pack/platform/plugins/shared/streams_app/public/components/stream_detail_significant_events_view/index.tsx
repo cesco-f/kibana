@@ -88,6 +88,7 @@ export function StreamDetailSignificantEventsView({ definition }: Props) {
         refresh();
         setIsSystemDetectionFlyoutOpen(false);
       }}
+      setSystems={setDetectedSystems}
     />
   ) : null;
 

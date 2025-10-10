@@ -86,6 +86,7 @@ export function StreamSystemConfiguration({ definition }: StreamConfigurationPro
               refresh();
               setIsFlyoutVisible(false);
             }}
+            setSystems={setSystems}
           />
         )}
       </EuiFlexGroup>
