@@ -1314,12 +1314,6 @@ export class WorkflowsExecutionEnginePlugin
         });
       }
 
-      await workflowTaskManager.scheduleImmediateResume({
-        executionId,
-        spaceId,
-        fakeRequest: request,
-      });
-
       await plugins.taskManager
         .removeIfExists(getWorkflowGlobalTimeoutResumeTaskId(executionId))
         .catch((error: unknown) => {
@@ -1330,7 +1324,9 @@ export class WorkflowsExecutionEnginePlugin
           );
         });
 
-      // Same idea as cancel: nudge TM so the resume task runs as soon as possible
+      // Let forceRunIdleTasks be the single scheduling authority for the resume: it
+      // runs an existing idle task if one is scoped to this execution, otherwise it
+      // schedules exactly one immediate resume and nudges it.
       await workflowTaskManager.forceRunIdleTasks(executionId, {
         spaceId,
         fakeRequest: request,
