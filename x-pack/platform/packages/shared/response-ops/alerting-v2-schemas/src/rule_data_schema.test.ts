@@ -49,6 +49,7 @@ describe('createRuleDataSchema', () => {
         kind: 'alert',
         metadata: { name: 'test rule' },
         time_field: '@timestamp',
+        project_routing: 'space',
         schedule: { every: '5m' },
         query: { format: 'standalone', breach: { query: 'FROM logs-* | LIMIT 1' } },
       });
@@ -1694,6 +1695,7 @@ describe('rule field immutability classification', () => {
         "grouping",
         "metadata",
         "no_data_strategy",
+        "project_routing",
         "query",
         "recovery_strategy",
         "schedule",

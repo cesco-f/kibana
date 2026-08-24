@@ -39,6 +39,28 @@ export const esqlQuerySchema = z
     }
   });
 
+/** Project routing (CPS scope) */
+
+/**
+ * Cross-Project Search (CPS) scope for a rule's user-data queries (breach,
+ * recovery, no-data). Only takes effect when CPS is enabled; ignored
+ * otherwise. Does not affect where the rule's own alert data is written —
+ * that always stays local to the rule's project.
+ */
+export const ruleProjectRoutingSchema = z.union([
+  z
+    .literal('space')
+    .describe("Default. Uses the current Kibana space's configured default project routing."),
+  z.literal('all').describe('Searches across every project linked via Cross-Project Search (CPS).'),
+  z.literal('origin').describe("Restricts the query to the rule's own originating project."),
+]);
+export const ruleProjectRouting = {
+  space: 'space',
+  all: 'all',
+  origin: 'origin',
+} as const;
+export type RuleProjectRouting = z.infer<typeof ruleProjectRoutingSchema>;
+
 /** Kind */
 
 export const ruleKindSchema = z
@@ -487,6 +509,11 @@ export const createRuleDataBaseSchema = z
       .describe('Time field used for the lookback window range filter.'),
     schedule: scheduleSchema,
     query: querySchema,
+    project_routing: ruleProjectRoutingSchema
+      .default(ruleProjectRouting.space)
+      .describe(
+        'Cross-Project Search (CPS) scope for this rule\'s queries. Defaults to "space"; ignored when CPS is disabled.'
+      ),
     recovery_strategy: recoveryStrategySchema
       .optional()
       .describe(
@@ -645,6 +672,7 @@ export const updateRuleDataSchema = z
     time_field: z.string().min(1).max(128).optional(),
     schedule: scheduleSchema.partial().optional().nullable(),
     query: querySchema.optional(),
+    project_routing: ruleProjectRoutingSchema.optional(),
     recovery_strategy: recoveryStrategySchema.optional().nullable(),
     no_data_strategy: noDataStrategySchema.optional().nullable(),
     state_transition: stateTransitionSchema.nullable(),

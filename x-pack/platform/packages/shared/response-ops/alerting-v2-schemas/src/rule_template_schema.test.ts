@@ -460,6 +460,27 @@ describe('rule template create-rule schema coupling', () => {
               ],
               "description": "How to handle no-data situations. \\"last_known_status\\" holds the last known status; \\"recover\\" forces recovery; \\"none\\" disables no-data detection. \\"emit\\" is not currently accepted by the create/update API. Standalone-format rules must provide a \`no_data\` query block when this is not \\"none\\"; composed-format rules use \`base\` as the data-presence query.",
             },
+            "project_routing": Object {
+              "anyOf": Array [
+                Object {
+                  "const": "space",
+                  "description": "Default. Uses the current Kibana space's configured default project routing.",
+                  "type": "string",
+                },
+                Object {
+                  "const": "all",
+                  "description": "Searches across every project linked via Cross-Project Search (CPS).",
+                  "type": "string",
+                },
+                Object {
+                  "const": "origin",
+                  "description": "Restricts the query to the rule's own originating project.",
+                  "type": "string",
+                },
+              ],
+              "default": "space",
+              "description": "Cross-Project Search (CPS) scope for this rule's queries. Defaults to \\"space\\"; ignored when CPS is disabled.",
+            },
             "query": Object {
               "$ref": "#/definitions/alerting_rule_query",
             },
@@ -550,6 +571,7 @@ describe('rule template create-rule schema coupling', () => {
             "time_field",
             "schedule",
             "query",
+            "project_routing",
           ],
           "type": "object",
         },
