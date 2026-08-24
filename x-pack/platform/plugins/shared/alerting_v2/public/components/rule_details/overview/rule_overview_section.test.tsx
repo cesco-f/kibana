@@ -40,6 +40,7 @@ const baseRule: RuleApiResponse = {
   enabled: true,
   metadata: { name: 'Test Rule', version: 1 },
   time_field: '@timestamp',
+  project_routing: 'space',
   schedule: { every: '5m', lookback: '10m' },
   query: { format: 'composed' as const, base: 'FROM logs-*', breach: { segment: '' } },
   created_by: 'alice@example.com',

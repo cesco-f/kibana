@@ -133,6 +133,7 @@ const baseRule: RuleApiResponse = {
     tags: ['prod', 'infra'],
   },
   time_field: '@timestamp',
+  project_routing: 'space',
   schedule: { every: '5m', lookback: '10m' },
   query: {
     format: 'standalone',

@@ -43,6 +43,7 @@ const buildBaseSnapshot = ({
     owner: 'observability',
   },
   time_field: 'timestamp',
+  project_routing: 'space',
   schedule: { every: '1m', lookback: '5h' },
   query: {
     format: 'standalone',

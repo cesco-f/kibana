@@ -504,6 +504,7 @@ describe('ComposeDiscoverFlyout', () => {
           enabled: true,
           metadata: { name: 'Signal rule', version: 1, owner: 'test', tags: [] },
           time_field: '@timestamp',
+          project_routing: 'space',
           schedule: { every: '1m', lookback: '5m' },
           query: { format: 'standalone', breach: { query: '' } },
           created_by: 'test',
@@ -946,6 +947,7 @@ describe('ComposeDiscoverFlyout', () => {
           enabled: true,
           metadata: { name: 'Edit rule', version: 1, owner: 'test', tags: [] },
           time_field: '@timestamp',
+          project_routing: 'space',
           schedule: { every: '1m', lookback: '5m' },
           query: {
             format: 'composed',
@@ -1015,6 +1017,7 @@ describe('ComposeDiscoverFlyout', () => {
           enabled: true,
           metadata: { name: 'Edit rule', version: 1, owner: 'test', tags: [] },
           time_field: '@timestamp',
+          project_routing: 'space',
           schedule: { every: '1m', lookback: '5m' },
           query: {
             format: 'composed',
@@ -1133,6 +1136,7 @@ describe('ComposeDiscoverFlyout', () => {
           enabled: true,
           metadata: { name: 'Edit rule', version: 1, owner: 'test', tags: [] },
           time_field: '@timestamp',
+          project_routing: 'space',
           schedule: { every: '1m', lookback: '5m' },
           query: {
             format: 'composed',
@@ -1307,6 +1311,7 @@ describe('ComposeDiscoverFlyout', () => {
           enabled: true,
           metadata: { name: 'Edit rule', version: 1, owner: 'test', tags: [] },
           time_field: '@timestamp',
+          project_routing: 'space',
           schedule: { every: '1m', lookback: '5m' },
           query: {
             format: 'composed',

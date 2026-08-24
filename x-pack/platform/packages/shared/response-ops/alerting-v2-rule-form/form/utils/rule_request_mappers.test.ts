@@ -750,6 +750,7 @@ describe('rule_request_mappers', () => {
         tags: ['tag1'],
       },
       time_field: '@timestamp',
+      project_routing: 'space',
       schedule: {
         every: '5m',
         lookback: '2m',

@@ -42,6 +42,7 @@ const validTemplateAttributes = {
       fields: ['k8s.pod.name'],
     },
     time_field: '@timestamp',
+    project_routing: 'space' as const,
   },
 };
 

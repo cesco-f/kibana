@@ -33,6 +33,7 @@ const baseRule: RuleApiResponse = {
   updated_by: BOB_UID,
   updated_at: '2026-03-04T12:00:00.000Z',
   time_field: '',
+  project_routing: 'space',
   schedule: {
     every: '',
     lookback: 'now-1h',

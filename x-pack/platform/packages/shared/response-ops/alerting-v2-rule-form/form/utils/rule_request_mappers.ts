@@ -154,6 +154,7 @@ export const mapFormValuesToRuleRequest = (formValues: FormValues): RuleRequestC
 
 export const mapFormValuesToCreateRequest = (formValues: FormValues): CreateRuleData => ({
   kind: formValues.kind,
+  project_routing: 'space',
   ...mapFormValuesToRuleRequest(formValues),
 });
 

@@ -27,6 +27,7 @@ const baseRuleResponse: RuleResponse = {
   enabled: true,
   metadata: { name: 'Test Rule', version: 1, owner: 'test-owner', tags: ['tag1'] },
   time_field: '@timestamp',
+  project_routing: 'space',
   schedule: { every: '5m', lookback: '2m' },
   query: {
     format: 'composed',

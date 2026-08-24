@@ -30,6 +30,7 @@ const mockRuleResponse: RuleResponse = {
     tags: [],
   },
   time_field: '@timestamp',
+  project_routing: 'space',
   schedule: { every: '1m', lookback: '5m' },
   query: { format: 'standalone', breach: { query: 'FROM logs-*' } },
   created_by: 'test-user',

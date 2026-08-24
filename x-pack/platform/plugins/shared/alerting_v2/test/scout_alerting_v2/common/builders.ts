@@ -44,6 +44,7 @@ const DEFAULTS: CreateRuleData = {
     breach: { query: 'FROM logs-* | LIMIT 10' },
   },
   time_field: '@timestamp',
+  project_routing: 'space',
   grouping: { fields: ['host.name'] },
   state_transition: { pending_count: 0, recovering_count: 0 },
 };

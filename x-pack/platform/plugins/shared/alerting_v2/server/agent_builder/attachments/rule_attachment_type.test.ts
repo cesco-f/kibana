@@ -30,6 +30,7 @@ const baseRuleData: RuleAttachmentData = {
     owner: 'observability',
   },
   time_field: '@timestamp',
+  project_routing: 'space',
   schedule: { every: '5m', lookback: '15m' },
   query: {
     format: 'standalone',

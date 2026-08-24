@@ -75,6 +75,7 @@ export const composeFormToCreateRequest = (
       ...(builderType ? { builder_type: builderType } : {}),
     },
     time_field: formValues.timeField,
+    project_routing: 'space',
     schedule: { every: formValues.schedule.every, lookback: formValues.schedule.lookback },
     query: ruleQueryToApiQuery(formValues.query),
     ...(recoveryStrategy ? { recovery_strategy: recoveryStrategy } : {}),
