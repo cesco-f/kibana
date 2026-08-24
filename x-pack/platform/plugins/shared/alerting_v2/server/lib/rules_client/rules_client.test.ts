@@ -50,6 +50,7 @@ const baseCreateData: CreateRuleParams['data'] = {
   kind: 'alert',
   metadata: { name: 'rule-1' },
   time_field: '@timestamp',
+  project_routing: 'space',
   schedule: { every: '1m', lookback: '1m' },
   query: { format: 'standalone', breach: { query: 'FROM logs-* | LIMIT 1' } },
 };

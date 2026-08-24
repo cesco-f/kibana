@@ -16,6 +16,7 @@ import {
   isRecoveryQueryProvidedForStrategy,
   isSignalQueryBreachOnly,
   isSignalUsingStandaloneFormat,
+  ruleProjectRouting,
   type ImmutableRuleField,
 } from '@kbn/alerting-v2-schemas';
 import { TaskStatus } from '@kbn/task-manager-plugin/server';
@@ -249,6 +250,7 @@ export function transformCreateRuleBodyToRuleSoAttributes(
       version,
     },
     time_field: data.time_field,
+    project_routing: data.project_routing,
     schedule: {
       every: data.schedule.every,
       lookback: data.schedule.lookback,
@@ -319,6 +321,7 @@ export function buildUpdateRuleAttributes(
       version,
     },
     time_field: updateData.time_field ?? existingAttrs.time_field,
+    project_routing: updateData.project_routing ?? existingAttrs.project_routing,
     schedule: { ...existingAttrs.schedule, ...updateData.schedule },
     // `query` - callers must send a complete new shape (we can't merge across formats),
     // so omitted = preserved, present = full replacement.
@@ -438,6 +441,9 @@ export function transformRuleSoAttributesToRuleApiResponse(
       version: attrs.metadata.version ?? RULE_VERSION_FALLBACK,
     },
     time_field: attrs.time_field,
+    // Rules created before model version 5 have no stored value; they always
+    // ran with the "space" scope, so that's the correct fallback.
+    project_routing: attrs.project_routing ?? ruleProjectRouting.space,
     schedule: {
       every: attrs.schedule.every,
       lookback: attrs.schedule.lookback,

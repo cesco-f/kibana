@@ -60,6 +60,7 @@ export function createRuleResponse(
     id: 'rule-1',
     kind: 'alert',
     time_field: '@timestamp',
+    project_routing: 'space',
     schedule: { every: '1m', lookback: '5m' },
     recovery_strategy: 'no_breach',
     query: { format: 'standalone', breach: { query: 'FROM logs-* | LIMIT 10' } },

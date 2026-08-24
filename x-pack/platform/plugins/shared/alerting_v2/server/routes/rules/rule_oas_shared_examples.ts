@@ -51,6 +51,7 @@ export const RULE_RESPONSE: RuleResponse = {
   ...SAMPLE_RULE_DATA,
   id: 'rule-1',
   version: 'WzAsMV0=',
+  project_routing: 'space',
   enabled: true,
   metadata: {
     ...SAMPLE_RULE_DATA.metadata,
