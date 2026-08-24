@@ -48,12 +48,18 @@ describe('ClassifyAbsentGroupsStep', () => {
   function createStep() {
     const internal = createQueryService();
     const scoped = createQueryService();
+    const queryServiceForRuleQuery = jest.fn().mockReturnValue(scoped.queryService);
     const step = new ClassifyAbsentGroupsStep(
       internal.queryService,
-      scoped.queryService,
+      queryServiceForRuleQuery,
       createPluginConfigAccessor()
     );
-    return { step, internalEsClient: internal.mockEsClient, scopedEsClient: scoped.mockEsClient };
+    return {
+      step,
+      internalEsClient: internal.mockEsClient,
+      scopedEsClient: scoped.mockEsClient,
+      queryServiceForRuleQuery,
+    };
   }
 
   function mockActiveGroups(
@@ -191,6 +197,25 @@ describe('ClassifyAbsentGroupsStep', () => {
       expect(internalEsClient.esql.query).toHaveBeenCalledTimes(1);
       // Short-circuits before the data-presence query.
       expect(scopedEsClient.esql.query).not.toHaveBeenCalled();
+    });
+
+    it("calls the QueryService factory with the rule's project_routing", async () => {
+      const { step, internalEsClient, queryServiceForRuleQuery } = createStep();
+      mockActiveGroups(internalEsClient, [hashFor('host-a')]);
+
+      const rule = createRuleResponse({
+        kind: 'alert',
+        recovery_strategy: 'no_breach',
+        project_routing: 'origin',
+      });
+      const state = createRulePipelineState({
+        rule,
+        alertEventsBatch: [createAlertEvent({ group_hash: 'host-a', status: 'breached' })],
+      });
+
+      await collectStreamResults(step.executeStream(createPipelineStream([state])));
+
+      expect(queryServiceForRuleQuery).toHaveBeenCalledWith('origin');
     });
   });
 

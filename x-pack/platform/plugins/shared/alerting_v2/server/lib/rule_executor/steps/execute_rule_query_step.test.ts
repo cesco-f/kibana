@@ -51,6 +51,7 @@ describe('ExecuteRuleQueryStep', () => {
   let mockEsClient: DeeplyMockedApi<ElasticsearchClient>;
   let mockLogger: ReturnType<typeof createLoggerService>['mockLogger'];
   let loggerService: ReturnType<typeof createLoggerService>['loggerService'];
+  let queryServiceForRuleQuery: jest.Mock;
 
   function createStep(
     maxAlertsPerRun?: number,
@@ -59,8 +60,9 @@ describe('ExecuteRuleQueryStep', () => {
     ({ loggerService, mockLogger } = createLoggerService());
     const mocks = createQueryService(responseFormat);
     mockEsClient = mocks.mockEsClient;
+    queryServiceForRuleQuery = jest.fn().mockReturnValue(mocks.queryService);
     return new ExecuteRuleQueryStep(
-      mocks.queryService,
+      queryServiceForRuleQuery,
       createPluginConfigAccessor(maxAlertsPerRun)
     );
   }
@@ -299,6 +301,17 @@ describe('ExecuteRuleQueryStep', () => {
     expect(results[0].type).toBe('continue');
     expect(results[0].state.esqlRowBatch).toEqual([]);
     expect(results[0].state.queryPayload).toBeDefined();
+  });
+
+  it("calls the QueryService factory with the rule's project_routing", async () => {
+    mockEsClient.esql.query.mockResolvedValue(createEsqlResponse());
+
+    const rule = createRuleResponse({ project_routing: 'all' });
+    const state = createRulePipelineState({ rule });
+
+    await collectStreamResults(step.executeStream(createPipelineStream([state])));
+
+    expect(queryServiceForRuleQuery).toHaveBeenCalledWith('all');
   });
 
   it('halts with state_not_ready when rule is missing from state', async () => {

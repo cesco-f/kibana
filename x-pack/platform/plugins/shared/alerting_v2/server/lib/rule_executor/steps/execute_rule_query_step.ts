@@ -15,8 +15,8 @@ import type { PluginInitializerContext } from '@kbn/core/server';
 import { isEsqlUserError } from '../../errors/esql_user_error';
 import type { PipelineStateStream, RuleExecutionStep } from '../types';
 import { getQueryPayload } from '../get_query_payload';
-import type { QueryServiceContract } from '../../services/query_service/query_service';
-import { QueryServiceScopedSpaceRoutingToken } from '../../services/query_service/tokens';
+import type { QueryServiceForRuleQueryFactory } from '../../services/query_service/tokens';
+import { QueryServiceForRuleQueryToken } from '../../services/query_service/tokens';
 import { guardedExpandStep, withAtLeastOne } from '../stream_utils';
 import { RULE_EXECUTION_COUNTERS } from '../metrics/counters';
 import type { PluginConfig } from '../../../config';
@@ -31,8 +31,8 @@ export class ExecuteRuleQueryStep implements RuleExecutionStep {
   private readonly maxQueryResponseSize: number;
 
   constructor(
-    @inject(QueryServiceScopedSpaceRoutingToken)
-    private readonly queryService: QueryServiceContract,
+    @inject(QueryServiceForRuleQueryToken)
+    private readonly queryServiceForRuleQuery: QueryServiceForRuleQueryFactory,
     @inject(PluginInitializer('config'))
     pluginConfigAccessor: PluginInitializerContext<PluginConfig>['config']
   ) {
@@ -65,8 +65,10 @@ export class ExecuteRuleQueryStep implements RuleExecutionStep {
         labels: { rule_id: input.ruleId, step: step.name },
       });
 
+      const queryService = step.queryServiceForRuleQuery(rule.project_routing);
+
       try {
-        const esqlRowBatchStream = step.queryService.executeQueryStream({
+        const esqlRowBatchStream = queryService.executeQueryStream({
           query: boundedQuery,
           filter: queryPayload.filter,
           params: queryPayload.params,

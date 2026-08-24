@@ -23,8 +23,9 @@ import { fetchActiveAlertGroupHashes } from '../fetch_active_alert_group_hashes'
 import { forwardThenFinalize } from '../stream_utils';
 import {
   QueryServiceInternalToken,
-  QueryServiceScopedSpaceRoutingToken,
+  QueryServiceForRuleQueryToken,
 } from '../../services/query_service/tokens';
+import type { QueryServiceForRuleQueryFactory } from '../../services/query_service/tokens';
 import type { QueryServiceContract } from '../../services/query_service/query_service';
 import type { ActiveAlertGroupHash } from '../queries';
 import type { RuleResponse } from '../../rules_client';
@@ -65,8 +66,8 @@ export class ClassifyAbsentGroupsStep implements RuleExecutionStep {
 
   constructor(
     @inject(QueryServiceInternalToken) private readonly internalQueryService: QueryServiceContract,
-    @inject(QueryServiceScopedSpaceRoutingToken)
-    private readonly scopedQueryService: QueryServiceContract,
+    @inject(QueryServiceForRuleQueryToken)
+    private readonly queryServiceForRuleQuery: QueryServiceForRuleQueryFactory,
     @inject(PluginInitializer('config'))
     pluginConfigAccessor: PluginInitializerContext<PluginConfig>['config']
   ) {
@@ -124,6 +125,8 @@ export class ClassifyAbsentGroupsStep implements RuleExecutionStep {
       return [];
     }
 
+    const scopedQueryService = this.queryServiceForRuleQuery(rule.project_routing);
+
     const activeGroups = await fetchActiveAlertGroupHashes(
       this.internalQueryService,
       rule.id,
@@ -137,7 +140,7 @@ export class ClassifyAbsentGroupsStep implements RuleExecutionStep {
     // Data presence — one query for the whole run.
     const dataPresentGroupHashes = noDataEnabled
       ? await detectDataPresence({
-          queryService: this.scopedQueryService,
+          queryService: scopedQueryService,
           rule,
           input,
           logger: state.logger.withLabels({ step: this.name }),
@@ -154,6 +157,7 @@ export class ClassifyAbsentGroupsStep implements RuleExecutionStep {
           breachedGroupHashes,
           dataPresentGroupHashes,
           logger: state.logger.withLabels({ step: this.name }),
+          scopedQueryService,
         })
       : [];
 
@@ -180,6 +184,7 @@ export class ClassifyAbsentGroupsStep implements RuleExecutionStep {
     breachedGroupHashes,
     dataPresentGroupHashes,
     logger,
+    scopedQueryService,
   }: {
     rule: RuleResponse;
     input: RulePipelineState['input'];
@@ -187,12 +192,13 @@ export class ClassifyAbsentGroupsStep implements RuleExecutionStep {
     breachedGroupHashes: ReadonlySet<string>;
     dataPresentGroupHashes?: ReadonlySet<string>;
     logger: RulePipelineState['logger'];
+    scopedQueryService: QueryServiceContract;
   }): Promise<AlertEvent[]> {
     const effectiveQuery = getRecoverEsqlQuery(rule.query, rule.recovery_strategy);
 
     if (effectiveQuery) {
       return executeRecoveryQuery({
-        queryService: this.scopedQueryService,
+        queryService: scopedQueryService,
         logger,
         rule,
         effectiveQuery,
