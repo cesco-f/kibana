@@ -10,6 +10,7 @@ import {
   ruleSavedObjectAttributesSchemaV1,
   ruleSavedObjectAttributesSchemaV2,
   ruleSavedObjectAttributesSchemaV3,
+  ruleSavedObjectAttributesSchemaV4,
 } from '../schemas/rule_saved_object_attributes';
 import { migrateRuleArtifactsToData } from './migrate_rule_artifacts_to_data';
 
@@ -74,6 +75,17 @@ export const ruleModelVersions: SavedObjectsModelVersionMap = {
     schemas: {
       forwardCompatibility: ruleSavedObjectAttributesSchemaV3.extends({}, { unknowns: 'ignore' }),
       create: ruleSavedObjectAttributesSchemaV3,
+    },
+  },
+  '5': {
+    // Adds the optional `project_routing` attribute (the CPS scope for the
+    // rule's user-data queries). Absent means "space" — today's behaviour —
+    // so no backfill is needed and no mapping is added: nothing queries,
+    // filters, sorts, or aggregates on this field.
+    changes: [],
+    schemas: {
+      forwardCompatibility: ruleSavedObjectAttributesSchemaV4.extends({}, { unknowns: 'ignore' }),
+      create: ruleSavedObjectAttributesSchemaV4,
     },
   },
 };
