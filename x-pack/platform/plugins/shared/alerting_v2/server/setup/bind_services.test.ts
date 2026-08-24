@@ -12,15 +12,12 @@ import { coreMock } from '@kbn/core/server/mocks';
 import { elasticsearchServiceMock } from '@kbn/core-elasticsearch-server-mocks';
 import { httpServerMock } from '@kbn/core-http-server-mocks';
 import { loggingSystemMock } from '@kbn/core-logging-server-mocks';
+import { PROJECT_ROUTING_ALL, PROJECT_ROUTING_ORIGIN } from '@kbn/cps-server-utils';
 import { configSchema } from '../config';
-import {
-  EsServiceInternalToken,
-  EsServiceScopedToken,
-  EsServiceScopedSpaceRoutingToken,
-} from '../lib/services/es_service/tokens';
+import { EsServiceInternalToken, EsServiceScopedToken } from '../lib/services/es_service/tokens';
 import {
   QueryServiceScopedToken,
-  QueryServiceScopedSpaceRoutingToken,
+  QueryServiceForRuleQueryToken,
 } from '../lib/services/query_service/tokens';
 import { bindServices } from './bind_services';
 
@@ -57,16 +54,6 @@ describe('bindServices - Elasticsearch client routing', () => {
     expect(client).toBe(elasticsearch.client.asScoped.mock.results[0].value.asCurrentUser);
   });
 
-  it("binds the space-routed scoped client with projectRouting: 'space'", () => {
-    const client = container.get(EsServiceScopedSpaceRoutingToken);
-
-    expect(elasticsearch.client.asScoped).toHaveBeenCalledTimes(1);
-    expect(elasticsearch.client.asScoped).toHaveBeenCalledWith(request, {
-      projectRouting: 'space',
-    });
-    expect(client).toBe(elasticsearch.client.asScoped.mock.results[0].value.asCurrentUser);
-  });
-
   it('wires the scoped QueryService to the origin-only (local) client', () => {
     container.get(QueryServiceScopedToken);
 
@@ -74,12 +61,45 @@ describe('bindServices - Elasticsearch client routing', () => {
     expect(elasticsearch.client.asScoped).toHaveBeenCalledWith(request);
   });
 
-  it("wires the space-routed scoped QueryService with projectRouting: 'space'", () => {
-    container.get(QueryServiceScopedSpaceRoutingToken);
+  describe('QueryServiceForRuleQueryToken factory', () => {
+    it("maps 'space' to projectRouting: 'space'", () => {
+      const factory = container.get(QueryServiceForRuleQueryToken);
+      factory('space');
 
-    expect(elasticsearch.client.asScoped).toHaveBeenCalledTimes(1);
-    expect(elasticsearch.client.asScoped).toHaveBeenCalledWith(request, {
-      projectRouting: 'space',
+      expect(elasticsearch.client.asScoped).toHaveBeenCalledTimes(1);
+      expect(elasticsearch.client.asScoped).toHaveBeenCalledWith(request, {
+        projectRouting: 'space',
+      });
+    });
+
+    it("maps 'all' to the CPS all-projects expression", () => {
+      const factory = container.get(QueryServiceForRuleQueryToken);
+      factory('all');
+
+      expect(elasticsearch.client.asScoped).toHaveBeenCalledTimes(1);
+      expect(elasticsearch.client.asScoped).toHaveBeenCalledWith(request, {
+        projectRouting: 'expression',
+        value: PROJECT_ROUTING_ALL,
+      });
+    });
+
+    it("maps 'origin' to the CPS origin-project expression", () => {
+      const factory = container.get(QueryServiceForRuleQueryToken);
+      factory('origin');
+
+      expect(elasticsearch.client.asScoped).toHaveBeenCalledTimes(1);
+      expect(elasticsearch.client.asScoped).toHaveBeenCalledWith(request, {
+        projectRouting: 'expression',
+        value: PROJECT_ROUTING_ORIGIN,
+      });
+    });
+
+    it('builds a new scoped client on every call, not reusing across routings', () => {
+      const factory = container.get(QueryServiceForRuleQueryToken);
+      factory('space');
+      factory('all');
+
+      expect(elasticsearch.client.asScoped).toHaveBeenCalledTimes(2);
     });
   });
 });

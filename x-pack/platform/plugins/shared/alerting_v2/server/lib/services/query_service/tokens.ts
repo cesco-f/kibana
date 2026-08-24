@@ -6,6 +6,7 @@
  */
 
 import { createToken } from '@kbn/core-di';
+import type { RuleProjectRouting } from '@kbn/alerting-v2-schemas';
 import type { QueryServiceContract } from './query_service';
 
 /**
@@ -18,13 +19,20 @@ export const QueryServiceScopedToken = createToken<QueryServiceContract>(
 );
 
 /**
- * QueryService flavor for rule-execution queries against user data. Uses an Elasticsearch client
- * scoped to the current request user with `projectRouting: 'space'`:
- * `elasticsearch.client.asScoped(request, { projectRouting: 'space' }).asCurrentUser`.
- * This scopes queries to the originating space/project when CPS is enabled.
+ * Builds a `QueryServiceContract` scoped to the current request user, with the CPS project
+ * routing mapped from a rule's `project_routing` value (see `toRuleQueryAsScopedOptions`). Used
+ * for rule-execution queries against user data (breach, recovery, no-data).
+ *
+ * The parameter is required — the rule is only known once `FetchRule` runs, so callers must pass
+ * `rule.project_routing` explicitly rather than relying on a default that could be reused by
+ * mistake for a rule with a different scope.
  */
-export const QueryServiceScopedSpaceRoutingToken = createToken<QueryServiceContract>(
-  'alerting_v2.QueryServiceScopedSpaceRouting'
+export type QueryServiceForRuleQueryFactory = (
+  projectRouting: RuleProjectRouting
+) => QueryServiceContract;
+
+export const QueryServiceForRuleQueryToken = createToken<QueryServiceForRuleQueryFactory>(
+  'alerting_v2.QueryServiceForRuleQuery'
 );
 
 /**

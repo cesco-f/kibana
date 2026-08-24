@@ -49,11 +49,8 @@ import {
 } from '../lib/rule_changes_history';
 import { RequestSpaceIdToken } from '../lib/services/spaces_service/tokens';
 import { ApiKeyService } from '../lib/services/api_key_service/api_key_service';
-import {
-  EsServiceInternalToken,
-  EsServiceScopedToken,
-  EsServiceScopedSpaceRoutingToken,
-} from '../lib/services/es_service/tokens';
+import { EsServiceInternalToken, EsServiceScopedToken } from '../lib/services/es_service/tokens';
+import { toRuleQueryAsScopedOptions } from '../lib/services/es_service/to_rule_query_as_scoped_options';
 import { EventLogService } from '../lib/services/event_log_service/event_log_service';
 import { EventLogServiceToken } from '../lib/services/event_log_service/tokens';
 import { LoggerService, LoggerServiceToken } from '../lib/services/logger_service/logger_service';
@@ -77,7 +74,7 @@ import { QueryService } from '../lib/services/query_service/query_service';
 import {
   QueryServiceInternalToken,
   QueryServiceScopedToken,
-  QueryServiceScopedSpaceRoutingToken,
+  QueryServiceForRuleQueryToken,
 } from '../lib/services/query_service/tokens';
 import { ResourceManager } from '../lib/services/resource_service/resource_manager';
 import { AlertingRetryService } from '../lib/services/retry_service';
@@ -193,16 +190,6 @@ export function bindServices({ bind }: ContainerModuleLoadOptions) {
     })
     .inRequestScope();
 
-  bind(EsServiceScopedSpaceRoutingToken)
-    .toDynamicValue(({ get }) => {
-      const request = get(Request);
-      const elasticsearch = get(CoreStart('elasticsearch'));
-      // `projectRouting: 'space'` scopes rule-execution queries to the originating space/project
-      // when CPS is enabled, matching alerting v1 behavior. Only `asCurrentUser` honors the option.
-      return elasticsearch.client.asScoped(request, { projectRouting: 'space' }).asCurrentUser;
-    })
-    .inRequestScope();
-
   // Task Manager is a dependency of this plugin, so it can begin polling and run
   // a task before this plugin's start lifecycle binds `CoreStart('injection')`.
   // Resolving it eagerly would throw when the binding is not yet available. The
@@ -315,15 +302,23 @@ export function bindServices({ bind }: ContainerModuleLoadOptions) {
     })
     .inRequestScope();
 
-  bind(QueryServiceScopedSpaceRoutingToken)
+  bind(QueryServiceForRuleQueryToken)
     .toDynamicValue(({ get }) => {
+      const request = get(Request);
+      const elasticsearch = get(CoreStart('elasticsearch'));
       const loggerService = get(LoggerServiceToken);
-      // Rule-execution queries run against user data and must respect the space project routing.
-      const esClient = get(EsServiceScopedSpaceRoutingToken);
       const pluginConfigAccessor = get<PluginInitializerContext<PluginConfig>['config']>(
         PluginInitializer('config')
       );
-      return new QueryService(esClient, loggerService, pluginConfigAccessor);
+      // Rule-execution queries run against user data and must respect the rule's own CPS scope
+      // (`rule.project_routing`). Only `asCurrentUser` honors the option.
+      return (projectRouting) => {
+        const esClient = elasticsearch.client.asScoped(
+          request,
+          toRuleQueryAsScopedOptions(projectRouting)
+        ).asCurrentUser;
+        return new QueryService(esClient, loggerService, pluginConfigAccessor);
+      };
     })
     .inRequestScope();
 
